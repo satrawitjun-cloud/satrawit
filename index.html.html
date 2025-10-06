@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบสอบคณิตศาสตร์ออนไลน์ • โหมด Professional Blue</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- MathJax: set config BEFORE loading script -->
+  <script> 
+    window.MathJax = {
+      tex: { inlineMath: [["$","$"],["\\(","\\)"]] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <!-- MathLive -->
+  <script type="module" src="https://unpkg.com/mathlive@0.94.0/dist/mathlive.mjs" defer></script>
+
+  <style>
+    :root{
+      --bg: #0b1220;          /* กรมท่าเข้มมาก (พื้นหลังไล่เฉด) */
+      --bg-2:#111c33;         /* กรมท่าเข้มอ่อนลง */
+      --card:#0f172a80;       /* กึ่งโปร่งใส (glass) */
+      --glass:#ffffff1a;      /* เส้นขอบโปร่งใส */
+      --ink:#e6eefc;          /* ข้อความอ่อน */
+      --ink-2:#c9d7ff;        /* ข้อความเข้มขึ้น */
+      --primary:#1e3a8a;      /* น้ำเงินกรม */
+      --accent:#3b82f6;       /* ฟ้า */
+      --accent-2:#60a5fa;     /* ฟ้าอ่อน */
+      --danger:#ef4444;
+      --success:#22c55e;
+      --warning:#f59e0b;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+
+    * { box-sizing:border-box }
+    html, body { height:100% }
+    body{
+      margin:0;
+      font-family: 'Kanit', 'Prompt', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -20%, #1b2a55 0%, transparent 60%),
+        radial-gradient(900px 700px at 110% 10%, #15305f 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      background-attachment: fixed;
+    }
+
+    /* Header */
+    .appbar{
+      position: sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: #0b1220cc;
+      border-bottom: 1px solid var(--glass);
+    }
+    .appbar-inner{
+      max-width: 1000px; margin:0 auto; padding: 12px 20px; display:flex; align-items:center; gap:16px;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand-logo{
+      width:38px; height:38px; border-radius:10px; background: linear-gradient(135deg, var(--accent), var(--primary));
+      box-shadow: inset 0 0 12px #ffffff33, 0 4px 15px #00000066;
+    }
+    .brand-title{ font-weight:600; letter-spacing:.2px }
+    .appbar-right{ margin-left:auto; display:flex; align-items:center; gap:16px; }
+
+    /* Timer pill */
+    .timer-pill{
+      font-weight:700; letter-spacing:.5px;
+      padding:10px 14px; border-radius:999px; background:#ffefeccc; color:#ffb4ad; border:1px solid #ffb4ad33;
+    }
+    .timer-pill.ok{ background:#102b1acc; color:#9ee6b1; border-color:#9ee6b133; }
+
+    /* Container */
+    .wrap{ max-width: 1000px; margin: 24px auto 80px; padding: 0 20px; }
+
+    /* Card */
+    .card{
+      background: linear-gradient(180deg, #0f162b99, #0b122080);
+      border: 1px solid var(--glass);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* Hero */
+    .hero{ padding: 22px; display:flex; flex-wrap:wrap; align-items:center; gap:20px; }
+    .hero h1{ margin:0; font-size: clamp(1.4rem, 2.2vw + .5rem, 2rem); color:#eaf2ff; font-weight:600 }
+    .hero small{ color:#9fb3ff }
+
+    /* Progress */
+    .progress{ padding: 18px 22px; border-top:1px solid var(--glass); display:grid; gap:10px; }
+    .progress-bar{
+      height: 12px; background:#0c1a33; border-radius:999px; overflow:hidden; border:1px solid #1d2c55;
+    }
+    .progress-bar > span{
+      display:block; height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .35s ease;
+    }
+    .progress-meta{ display:flex; justify-content:space-between; color:#a8b8e8; font-size:.95rem }
+
+    /* Exam block */
+    .exam{ margin-top: 22px; display:grid; gap:18px }
+    .question{ padding: 20px; border:1px solid var(--glass); border-radius: 14px; background: #0d173080; }
+    .q-title{ margin:0 0 12px; color:#e8edff; font-size:1.1rem; font-weight:600 }
+    .options label{ display:block; padding:10px 12px; border:1px solid #ffffff14; border-radius:10px; margin-bottom:10px; cursor:pointer; transition:.15s ease;
+      background:#0b142a80; }
+    .options label:hover{ transform: translateX(4px); border-color:#3b82f633; background:#0b1d3a80 }
+    .options input[type="radio"]{ margin-right:10px; transform: scale(1.2); vertical-align: middle; }
+
+    /* MathLive fields */
+    math-field{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid #3b82f640; background:#0b142a; color:#eaf2ff; font-size:1.05rem;
+      --ML__focus-border-color: var(--accent);
+      --ML__keyboard-background-color: #0e1a33;
+      --ML__keyboard-accent-color: var(--accent);
+      box-shadow: inset 0 0 0 999px #ffffff08;
+    }
+    math-field:focus-within{ outline: 2px solid #3b82f666; }
+
+    /* Footer action */
+    .footer-actions{ margin-top: 12px; display:flex; gap:12px; justify-content:flex-end; align-items:center }
+    .btn{
+      --btn-bg: linear-gradient(135deg, var(--accent), #1e40af);
+      display:inline-flex; gap:8px; align-items:center; padding:12px 18px; border-radius:12px; border:1px solid #8ab6ff33; font-weight:600; letter-spacing:.3px; cursor:pointer;
+      background: var(--btn-bg); color:white; box-shadow: 0 8px 22px #0b0f1f;
+      transition: transform .15s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .btn:hover{ transform: translateY(-2px); box-shadow: 0 12px 28px #0b0f1f; filter: brightness(1.05) }
+    .btn.secondary{ --btn-bg: #0b142a; color:#cfe0ff; border-color:#ffffff1a }
+
+    .muted{ color:#9fb3ff; font-size:.95rem }
+
+    /* Warning */
+    .warning{ display:none; margin-top:14px; padding:12px 14px; border-radius:12px; border:1px solid #ffb4ad33; background:#2a0f12; color:#ffc3bd; font-weight:600 }
+
+    /* Utility */
+    .row{ display:grid; gap:10px }
+
+    /* Responsive */
+    @media (max-width: 640px){
+      .appbar-inner{ padding: 10px 14px }
+      .hero{ padding:14px }
+      .question{ padding:14px }
+      .footer-actions{ flex-direction:column; align-items:stretch }
+    }
+  </style>
+</head>
+<body>
+  <!-- Top App Bar -->
+  <header class="appbar">
+    <div class="appbar-inner">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true"></div>
+        <div>
+          <div class="brand-title">ระบบสอบคณิตศาสตร์ออนไลน์</div>
+          <small class="muted">โรงเรียนมหาวชิราวุธ จังหวัดสงขลา</small>
+        </div>
+      </div>
+      <div class="appbar-right">
+        <div id="timer-pill" class="timer-pill ok" aria-live="polite">เวลาที่เหลือ: 30:00</div>
+      </div>
+    </div>
+  </header>
+ <!-- ส่วนรับรหัสนักเรียน -->
+<div id="student-form" style="text-align:center; margin-top:40px;">
+  <h2>กรุณากรอกรหัสนักเรียนก่อนเริ่มสอบ</h2>
+  <input id="studentIdInput" type="text" placeholder="เช่น 65001" 
+         style="font-size:1.2em;padding:10px 15px;border-radius:8px;border:1px solid #ccc;">
+  <button onclick="startExam()" 
+          style="padding:10px 20px;font-size:1.1em;border:none;border-radius:8px;
+                 background-color:#1e3a8a;color:white;cursor:pointer;">เริ่มทำข้อสอบ</button>
+</div>
+
+<!-- ซ่อนเนื้อหาข้อสอบไว้ก่อน -->
+<main class="wrap" id="exam-main" style="display:none;">
+
+  <main class="wrap">
+    <!-- Hero Card -->
+    <section class="card hero" role="region" aria-labelledby="exam-title">
+      <div class="row" style="min-width:240px">
+        <h1 id="exam-title">ข้อสอบวิชา: คณิตศาสตร์ (มัธยมศึกษาตอนปลาย)</h1>
+        <small>กรุณาตรวจสอบชื่อ-เวลา และตอบคำถามตามลำดับ</small>
+      </div>
+    </section>
+
+    <!-- Progress -->
+    <section class="card progress" aria-label="ความคืบหน้าการทำข้อสอบ">
+      <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+      <div class="progress-meta">
+        <div><strong id="progress-count">0</strong>/10 ข้อ</div>
+        <div id="progress-percent">0%</div>
+      </div>
+    </section>
+
+    <!-- Exam Questions -->
+    <section class="exam" id="exam-root">
+      <article class="question" data-q="1">
+        <p class="q-title">1) จงหาค่าของ $x$ เมื่อกำหนดให้สมการคือ $2x + 5 = 15$</p>
+        <div class="options">
+          <label><input type="radio" name="q1" value="a"/> A) $x = 3$</label>
+          <label><input type="radio" name="q1" value="b"/> B) $x = 5$</label>
+          <label><input type="radio" name="q1" value="c"/> C) $x = 7$</label>
+          <label><input type="radio" name="q1" value="d"/> D) $x = 10$</label>
+          <label><input type="radio" name="q1" value="e"/> E) ไม่มีข้อใดถูก</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="2">
+        <p class="q-title">2) ถ้า $f(x) = x^2 - 4x + 3$ จงหาค่า $f(5)$</p>
+        <div class="options">
+          <label><input type="radio" name="q2" value="a"/> A) $5$</label>
+          <label><input type="radio" name="q2" value="b"/> B) $8$</label>
+          <label><input type="radio" name="q2" value="c"/> C) $10$</label>
+          <label><input type="radio" name="q2" value="d"/> D) $12$</label>
+          <label><input type="radio" name="q2" value="e"/> E) $15$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="3">
+        <p class="q-title">3) พื้นที่ของวงกลมที่มีรัศมี $r=7$ หน่วย คือเท่าไหร่? (กำหนดให้ $\\pi \approx \\tfrac{22}{7}$)</p>
+        <div class="options">
+          <label><input type="radio" name="q3" value="a"/> A) $49 \pi$ ตารางหน่วย</label>
+          <label><input type="radio" name="q3" value="b"/> B) $22 \pi$ ตารางหน่วย</label>
+          <label><input type="radio" name="q3" value="c"/> C) $14 \pi$ ตารางหน่วย</label>
+          <label><input type="radio" name="q3" value="d"/> D) $154$ ตารางหน่วย</label>
+          <label><input type="radio" name="q3" value="e"/> E) $132$ ตารางหน่วย</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="4">
+        <p class="q-title">4) จงคำนวณค่าของ $\\sqrt{81} - \\sqrt{25}$</p>
+        <div class="options">
+          <label><input type="radio" name="q4" value="a"/> A) $2$</label>
+          <label><input type="radio" name="q4" value="b"/> B) $4$</label>
+          <label><input type="radio" name="q4" value="c"/> C) $9$</label>
+          <label><input type="radio" name="q4" value="d"/> D) $14$</label>
+          <label><input type="radio" name="q4" value="e"/> E) $16$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="5">
+        <p class="q-title">5) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="6">
+        <p class="q-title">6) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="7">
+        <p class="q-title">7) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="8">
+        <p class="q-title">8) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="9">
+        <p class="q-title">9) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="10">
+        <p class="q-title">10) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="11">
+        <p class="q-title">11) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="12">
+        <p class="q-title">12) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="13">
+        <p class="q-title">13) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="14">
+        <p class="q-title">14) ผลรวมของอนุกรม $1 + 2 + 3 + ... + 10$ เท่ากับเท่าไหร่?</p>
+        <div class="options">
+          <label><input type="radio" name="q5" value="a"/> A) $45$</label>
+          <label><input type="radio" name="q5" value="b"/> B) $50$</label>
+          <label><input type="radio" name="q5" value="c"/> C) $55$</label>
+          <label><input type="radio" name="q5" value="d"/> D) $60$</label>
+          <label><input type="radio" name="q5" value="e"/> E) $100$</label>
+        </div>
+      </article>
+
+      <article class="question" data-q="15">
+        <p class="q-title">15) จงหาค่าของ $3^2 + 4^2$</p>
+        <math-field id="q15_ans" placeholder="พิมพ์ตัวเลข เช่น 25"></math-field>
+      </article>
+
+      <article class="question" data-q="16">
+        <p class="q-title">16) ถ้า $A = \\begin{pmatrix} 1 & 2 \\ \\ 3 & 4 \\end{pmatrix}$ จงหาค่าดีเทอร์มิแนนต์ของ $A$</p>
+        <math-field id="q16_ans" placeholder="พิมพ์ตัวเลข เช่น -2"></math-field>
+      </article>
+
+      <article class="question" data-q="17">
+        <p class="q-title">17) จงหาค่า $x$ จากสมการ $\\log_2 (x+1) = 3$</p>
+        <math-field id="q17_ans" placeholder="พิมพ์ตัวเลข เช่น 7"></math-field>
+      </article>
+
+      <article class="question" data-q="18">
+        <p class="q-title">18) ผลลัพธ์ของ $\\tfrac{1}{2} + \\tfrac{1}{4}$ คือเท่าใด? (ตอบเป็นเศษส่วน)</p>
+        <math-field id="q18_ans" placeholder="พิมพ์เศษส่วน เช่น \\frac{3}{4}"></math-field>
+      </article>
+
+      <article class="question" data-q="19">
+        <p class="q-title">19) ถ้า $y = x^3 - 2x + 1$ จงหา $\\dfrac{dy}{dx}$ ที่ $x=1$</p>
+        <math-field id="q19_ans" placeholder="พิมพ์ตัวเลข เช่น 1"></math-field>
+      </article>
+
+      <article class="question" data-q="20">
+        <p class="q-title">20) ถ้า $y = x^3 - 2x + 1$ จงหา $\\dfrac{dy}{dx}$ ที่ $x=1$</p>
+        <math-field id="q20_ans" placeholder="พิมพ์ตัวเลข เช่น 1"></math-field>
+      </article>
+
+      <div id="warningMessage" class="warning">คำเตือน: คุณกำลังออกจากหน้าจอสอบ กรุณากลับทันที</div>
+
+      <div class="footer-actions">
+        <button id="kb-toggle" class="btn secondary" type="button">⌨️ เปิด/ปิดแป้นพิมพ์สัญลักษณ์</button>
+        <button id="submitBtn" class="btn" type="button">ส่งข้อสอบ</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ========= State =========
+    let timeRemaining = 30 * 60; // 30 นาที
+    let timerInterval = null;
+    let isExamActive = true;
+    let blurCount = 0;
+
+    const totalQuestions = 10;
+
+    const elTitle = document.title;
+    const timerPill = document.getElementById('timer-pill');
+    const progressFill = document.getElementById('progress-fill');
+    const progressCount = document.getElementById('progress-count');
+    const progressPercent = document.getElementById('progress-percent');
+    const warningMessage = document.getElementById('warningMessage');
+
+    // ========= Timer =========
+    function formatTime(sec){
+      const m = Math.floor(sec/60).toString().padStart(2,'0');
+      const s = (sec%60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
+    function updateTimer(){
+      if(!isExamActive) return;
+      timerPill.textContent = `เวลาที่เหลือ: ${formatTime(timeRemaining)}`;
+      document.title = `⏱️ ${formatTime(timeRemaining)} • ระบบสอบคณิตศาสตร์`;
+      if(timeRemaining <= 0){
+        clearInterval(timerInterval);
+        isExamActive = false;
+        timerPill.classList.remove('ok');
+        timerPill.classList.add('danger');
+        alert('หมดเวลาสอบแล้ว! ระบบจะส่งข้อสอบอัตโนมัติ');
+        submitExam();
+      } else {
+        if(timeRemaining <= 60) { timerPill.classList.remove('ok'); }
+        timeRemaining--;
+      }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      timerInterval = setInterval(updateTimer, 1000);
+      attachListeners();
+      computeProgress();
+    });
+
+    // ========= Progress =========
+    function computeProgress(){
+      // นับข้อที่ตอบแล้ว (radio + math-field ที่ไม่ว่าง)
+      let answered = 0;
+      for(let i=1;i<=5;i++){
+        if(document.querySelector(`input[name="q${i}"]:checked`)) answered++;
+      }
+      for(let i=6;i<=10;i++){
+        const v = (document.getElementById(`q${i}_ans`)?.value || '').trim();
+        if(v) answered++;
+      }
+      const pct = Math.round((answered/totalQuestions)*100);
+      progressFill.style.width = pct + '%';
+      progressCount.textContent = answered;
+      progressPercent.textContent = pct + '%';
+    }
+
+    // ========= Submit =========
+    function submitExam(){
+      if(!isExamActive && timeRemaining <= 0){ return; }
+      clearInterval(timerInterval);
+      isExamActive = false;
+
+      const studentAnswers = {};
+      for(let i=1;i<=5;i++){
+        const checked = document.querySelector(`input[name="q${i}"]:checked`);
+        studentAnswers[`q${i}`] = checked ? checked.value : 'ไม่ได้ตอบ';
+      }
+      for(let i=6;i<=10;i++){
+        const field = document.getElementById(`q${i}_ans`);
+        studentAnswers[`q${i}`] = field ? field.value : '';
+      }
+
+      console.log('==== คำตอบของนักเรียน ====' );
+      console.log(studentAnswers);
+      console.log('==========================');
+
+      alert('ส่งข้อสอบเรียบร้อยแล้ว! (คำตอบถูกพิมพ์ลงใน Console)');
+
+      // TODO: ส่งไปเซิร์ฟเวอร์
+      // === ส่งไป Google Apps Script Web App ===
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyqFV77zoXefbeHCq4Ax1EQnbBCXaqNl-GFiIWeYMyQaJ6ugqRaH2n1yLLcPl_JdNFmUg/exec';
+
+fetch(WEBAPP_URL, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    meta: {
+      examId: 'MATH-G12-SET1',
+      studentId: localStorage.getItem('studentId') || '',
+      blurCount,
+      timeRemaining,
+      userAgent: navigator.userAgent
+    },
+    answers: studentAnswers
+  })
+})
+.then(r => r.json())
+.then(resp => {
+  console.log('GAS response:', resp);
+  alert('ส่งข้อสอบเรียบร้อยแล้ว! ระบบได้รับคำตอบของคุณ');
+})
+.catch(err => {
+  console.error(err);
+  alert('ส่งข้อสอบไม่สำเร็จ กรุณาติดต่อผู้คุมสอบ');
+});
+
+      // fetch('/submit-exam', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(studentAnswers) })
+      //   .then(r=>r.json()).then(console.log).catch(console.error);
+    }
+
+    // ========= Events =========
+    function attachListeners(){
+      // Radio
+      for(let i=1;i<=5;i++){
+        document.querySelectorAll(`input[name="q${i}"]`).forEach(r => {
+          r.addEventListener('change', computeProgress);
+        });
+      }
+      // Math fields -> add ids (for computeProgress)
+      for(let i=6;i<=10;i++){
+        const mf = document.getElementById(`q${i}_ans`);
+        if(mf){
+          mf.addEventListener('input', computeProgress);
+        }
+      }
+      // Submit
+      document.getElementById('submitBtn').addEventListener('click', submitExam);
+      // Toggle VK
+      document.getElementById('kb-toggle').addEventListener('click', toggleKeyboard);
+
+      // Anti-cheat (เบื้องต้นแบบสุภาพ)
+// ✅ ส่งข้อสอบอัตโนมัติทันทีเมื่อผู้เข้าสอบออกจากหน้าจอ 1 ครั้ง
+window.addEventListener('blur', () => {
+  if(!isExamActive || timeRemaining<=0) return;
+  warningMessage.style.display = 'block';
+  clearInterval(timerInterval);
+  isExamActive = false;
+  blurCount++;
+  alert('คุณออกจากหน้าจอสอบ ระบบจะส่งข้อสอบโดยอัตโนมัติ');
+  submitExam();
+});
+
+      window.addEventListener('blur', () => {
+        if(!isExamActive || timeRemaining<=0) return;
+        warningMessage.style.display = 'block';
+        clearInterval(timerInterval);
+        isExamActive = false;
+        blurCount++;
+      });
+      window.addEventListener('focus', () => {
+        if(!isExamActive && timeRemaining>0){
+          warningMessage.style.display = 'none';
+          timerInterval = setInterval(updateTimer, 1000);
+          isExamActive = true;
+        }
+      });
+
+      // Context menu guard (ยกเว้นใน math-field)
+      document.addEventListener('contextmenu', (e)=>{
+        const tag = (document.activeElement?.tagName||'');
+        if(tag !== 'MATH-FIELD'){ e.preventDefault(); }
+      });
+
+      // DevTools keys (ปรับให้นุ่มนวล)
+      document.addEventListener('keydown', (e)=>{
+        const tag = (document.activeElement?.tagName||'');
+        if((e.key==='F12' || (e.ctrlKey && e.shiftKey && e.key.toUpperCase()==='I')) && tag !== 'MATH-FIELD'){
+          e.preventDefault();
+        }
+      });
+    }
+
+    // ========= MathLive Virtual Keyboard =========
+    function toggleKeyboard(){
+      // toggle attribute on all math-field
+      document.querySelectorAll('math-field').forEach(mf => {
+        const mode = mf.getAttribute('virtual-keyboard-mode') || 'manual';
+        const next = mode === 'manual' ? 'onfocus' : 'manual';
+        mf.setAttribute('virtual-keyboard-mode', next);
+      });
+    }
+
+    function startExam() {
+  const id = document.getElementById('studentIdInput').value.trim();
+  if (!id) {
+    alert('กรุณากรอกรหัสนักเรียนก่อนเริ่มสอบ');
+    return;
+  }
+
+  // เก็บลง localStorage เพื่อใช้ภายหลัง
+  localStorage.setItem('studentId', id);
+
+  // ซ่อนแบบฟอร์มและแสดงข้อสอบ
+  document.getElementById('student-form').style.display = 'none';
+  document.getElementById('exam-main').style.display = 'block';
+
+  // เริ่มจับเวลา
+  timerInterval = setInterval(updateTimer, 1000);
+  attachListeners();
+  computeProgress();
+}
+
+  </script>
+</body>
+</html>
